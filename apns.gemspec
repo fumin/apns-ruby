@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = 'apns-ruby'
-  s.version = '0.0.0'
+  s.version = '0.0.1'
   s.date = '2014-06-05'
   s.summary = 'APNS notifications sent properly'
   s.description = 'APNS notifications sent properly with correct connection management and error handling'
@@ -9,6 +9,7 @@ Gem::Specification.new do |s|
   s.files = [
     'README.md',
     'lib/apns.rb',
+    'lib/apns/infinite_array.rb',
     'lib/apns/connection.rb',
     'lib/apns/notification.rb',
   ]
