@@ -4,7 +4,7 @@ This gem sends APNS notifications with proper error handling. Most importantly, 
 * Storing notifications in a database, and have a separate process consume them. Worse, only a single consumer is ever allowed.
 * Opening a new SSL connection for every notification, which typically takes several hundred milliseconds. Imagine how long it would take to send a million notifications.
 
-Beware though, that this gem has it's own nonsense in that by default, it sets the notification buffer size to 1 million, which could potentially take up 256MB of memory (Apple caps the size of a single notification's payload at 256 bytes). If you cannot afford to spare that amount of memory, configure it to a lesser number `conn = APNS::Connection.new(notification_buffer_size: 1024) # 1024 bytes`.
+Beware though, that this gem has it's own nonsense in that by default, it sets the notification buffer size to 1 million, which could potentially take up 256MB of memory, given that Apple caps the size of a single notification's payload at 256 bytes. If you cannot afford to spare that amount of memory, configure it to a lesser number `conn = APNS::Connection.new(notification_buffer_size: 1024) # 1024 bytes`.
 
 Example usage:
 ```
