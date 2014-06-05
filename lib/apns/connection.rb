@@ -10,7 +10,7 @@ class Connection
                  pass: nil,
                  host: 'gateway.sandbox.push.apple.com',
                  port: 2195,
-                 notification_buffer_size: 1_000_000)
+                 notification_buffer_size: 512_000)
     @notifications = []
     @pem =  pem
     @pass = pass
