@@ -13,7 +13,7 @@ class Connection
                  pass: nil,
                  host: 'gateway.sandbox.push.apple.com',
                  port: 2195,
-                 buffer_size: 64 * 1024)
+                 buffer_size: 4 * 1024)
     @notifications = InfiniteArray.new(buffer_size: buffer_size)
     @pem =  pem
     @pass = pass
