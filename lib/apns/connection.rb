@@ -20,6 +20,14 @@ class Connection
     @host = host
     @port = port
 
+    # Our current strategy is to read errors emitted by the APNS in a separate
+    # thread spawned when we open a new connection (read_errors method).
+    # If this thread receives an error information from the @ssl, it turns on
+    # the @lock, so that no direct write operation can be performed on the same
+    # Connection instance.
+    #
+    @lock = Mutex.new
+
     @sock, @ssl = open_connection
     ObjectSpace.define_finalizer(self, self.class.finalize(@sock, @ssl))
   end
@@ -31,8 +39,8 @@ class Connection
   end
 
   def push ns
-    # The notification identifier is set to 4 bytes in the APNS protocol. Thus,
-    # upon hitting this limit, read for failures and restart the counting again.
+    # The notification identifier is set to 4 bytes in the APNS protocol.
+    # Thus, upon hitting this limit, read for failures and restart the counting again.
     if @notifications.size + ns.size > MAX_32_BIT - 10
       code, failed_id = read_failure_info(timeout: 3)
       if failed_id
@@ -48,7 +56,7 @@ class Connection
       n.message_identifier = [@notifications.size].pack('N')
       @notifications.push(n)
     }
-    write ns
+    @lock.synchronize{ write ns }
   end
 
 
@@ -57,16 +65,6 @@ class Connection
   def write ns
     packed = pack_notifications(ns)
     @ssl.write(packed)
-  rescue Errno::EPIPE, Errno::ECONNRESET, OpenSSL::SSL::SSLError
-    code, failed_id = read_failure_info(timeout: 30)
-    reopen_connection
-    return unless failed_id # there's nothing we can do
-
-    @error_handler.call(code, @notifications.item_at(failed_id))
-
-    @notifications.delete_where_index_less_than(failed_id+1)
-    ns = @notifications.items_from(failed_id+1)
-    retry
   end
 
   def pack_notifications notifications
@@ -105,7 +103,27 @@ class Connection
     ssl          = OpenSSL::SSL::SSLSocket.new(sock,context)
     ssl.connect
 
+    Thread.new {
+      read_errors ssl
+    }
+
     return sock, ssl
+  end
+
+  def read_errors ssl
+    tuple = ssl.read(6)
+
+    @lock.synchronize {
+      _, code, failed_id = tuple.unpack("ccN")
+      reopen_connection
+      return unless failed_id # there's nothing we can do
+
+      @error_handler.call(code, @notifications.item_at(failed_id))
+
+      @notifications.delete_where_index_less_than(failed_id+1)
+      ns = @notifications.items_from(failed_id+1)
+      write ns
+    }
   end
 
   # Override inspect since we do not want to print out the entire @notifications,

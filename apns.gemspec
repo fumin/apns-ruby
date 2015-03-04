@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
   s.name = 'apns-ruby'
-  s.version = '0.0.2'
-  s.date = '2014-06-05'
+  s.version = '1.0.0'
+  s.date = '2015-03-04'
   s.summary = 'APNS notifications sent properly'
   s.description = 'APNS notifications sent properly with correct connection management and error handling'
   s.authors = ['awaw']
